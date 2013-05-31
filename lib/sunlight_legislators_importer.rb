@@ -5,7 +5,7 @@ class SunlightLegislatorsImporter
   def self.import
     csv = CSV.new(File.open("db/data/legislators.csv"), {:headers => true, :header_converters => :symbol})
     csv.each do |row|
-      Legislator.create!(Hash[row.headers[1..-1].zip(row.fields[1..-1])])
+      Legislator.create!(Hash[row.headers[0..-1].zip(row.fields[0..-1])])
     end
   end
 end
