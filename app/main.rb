@@ -2,9 +2,10 @@ require_relative '../db/config'
 require_relative 'models/legislator'
 require 'awesome_print'
 
-# ALL_STATES = [”AK”,”AL”,”AR”,”AS”,”AZ”,”CA”,”CO”,”CT”,”DE”,”FL”,”GA”,”GU”,”HI”,”IA”,”ID”,
-# “IL”,”IN”,”KS”,”KY”,”LA”,”MA”,”MD”,”ME”,”MH”,”MI”,”MN”,”MO”,”MS”,”MT”,”NC”,”ND”,”NE”,”NH”,”NJ”,”NM”,”NV”,”NY”,
-# “OH”,”OK”,”OR”,”PA”,”RI”,”SC”,”SD”,”TN”,”TX”,”UT”,”VA”,”VI”,”VT”,”WA”,”WI”,”WV”,”WY”]
+# the Munger gem looks like it would make this all much easier:
+# https://github.com/schacon/munger/wiki/MungerData
+
+ALL_STATES = ["AK","AL","AR","AZ","CA","CO","CT","DE","FL","GA","HI","IA","ID","IL","IN","KS","KY","LA","MA","MD","ME","MI","MN","MO","MS","MT","NC","ND","NE","NH","NJ","NM","NV","NY","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VA","VT","WA","WI","WV","WY"]
 
 def legislators_by_state(state_abbr)
   Legislator.select("firstname, lastname, party, title").where("state = ? AND in_office = ?", state_abbr, 1).order("lastname DESC")
@@ -44,14 +45,45 @@ def print_gender_stats(gender)
   ap "#{gender_string} Representatives: #{reps} (#{(100*reps/total_reps)}%)"
 end
 
-ap Legislator.count(:conditions => ["title = ?", "Rep"])
+def print_leg_count_by_state
+  count_by_state = []
+  ALL_STATES.each do |state|
+    count_by_state << [state, count_by_office_state("Sen", state), count_by_office_state("Rep", state)]
+  end
+  count_by_state.sort_by { | state | state[1] + state[2]}.reverse_each do |state|
+    puts "#{state[0]}: #{state[1]} Senators, #{state[2]} Representatives"
+  end
+end
 
-# ap Legislator.where("state = ? AND title = ?", "CA", "Sen")
-# p Legislator.where("title = ?")
+def count_by_title(title)
+ Legislator.count(:conditions => ["title = ?", title])
+end
 
 
-# print_legislators("CA")
-# print_gender_stats("F")
+print_legislators("CA")
+puts
+
+print_gender_stats("M")
+puts
+
+print_leg_count_by_state
+puts
+
+puts "Senators: #{count_by_title("Sen")}"
+puts "Representatives: #{count_by_title("Rep")}"
+
+def remove_inactive!
+  Legislator.delete_all("in_office = 0")
+end
+puts
+
+remove_inactive!
+
+puts "Senators: #{count_by_title("Sen")}"
+puts "Representatives: #{count_by_title("Rep")}"
+
+
+
 
 
 
